@@ -48,10 +48,14 @@ and extra blank virtual disks if you want to try pools. After boot, find the VM'
 *Using the `.vmdk` instead (untested):* VirtualBox's Import Appliance only takes OVA/OVF, so create the VM with **Machine -> New**
 (Linux, Other Linux 64-bit, tick *Enable EFI*), and attach the VMDK under **Settings -> Storage -> SATA controller -> Add Hard Disk -> Choose existing**.
 
-### VMware Workstation / Fusion / ESXi
+### VMware Workstation (tested) / Fusion / ESXi (untested)
 [Workstation & Fusion product page](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | [How to download (free for personal use)](https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hype.html). Downloads need a free Broadcom account.
 
-Import the `.ova` (File -> Open, or *Deploy OVF* on ESXi). On ESXi, if the OVA import complains, upload the `.vmdk`, run
+**Workstation Pro:** **File -> Open** the `.ova` (or double-click it) and import it. UEFI, the SATA disk and the network adapter are
+already set in the OVA, so no settings need changing. Use a bridged network adapter, power on, and wait 1-3 minutes; the console
+shows the VM's `IPv4:` address. Open `http://<that address>/`.
+
+**Fusion (Mac) and ESXi** should import the same OVA but are untested. On ESXi, if the OVA import complains, upload the `.vmdk`, run
 `vmkfstools -i mos.vmdk -d thin mos-esx.vmdk`, and attach it to a new UEFI VM (SATA controller, `e1000e` NIC).
 
 ### Hyper-V (Windows)
