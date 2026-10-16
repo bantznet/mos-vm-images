@@ -1,0 +1,78 @@
+name: Build MOS VM images
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "mos-releases tag (blank = latest)"
+        required: false
+  schedule:
+    - cron: "17 6 * * *"   # daily: build only if upstream has a release we haven't published
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-utils qemu-system-x86 ovmf parted dosfstools unzip jq
+
+      - name: Resolve upstream release
+        id: rel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -n "$TAG" ]; then URL="https://api.github.com/repos/mos-nas/mos-releases/releases/tags/$TAG"
+          else URL="https://api.github.com/repos/mos-nas/mos-releases/releases/latest"; fi
+          curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$URL" > rel.json
+          TAG=$(jq -r .tag_name rel.json)
+          ZIP_URL=$(jq -r '.assets[] | select(.name|test("_amd64\\.zip$")) | .browser_download_url' rel.json)
+          DIGEST=$(jq -r '.assets[] | select(.name|test("_amd64\\.zip$")) | .digest' rel.json)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "zip_url=$ZIP_URL" >> "$GITHUB_OUTPUT"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          if gh release view "vm-$TAG" >/dev/null 2>&1 && [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download + verify release ZIP
+        if: steps.rel.outputs.skip != 'true'
+        run: |
+          curl -fsSL -o mos.zip "${{ steps.rel.outputs.zip_url }}"
+          want="${{ steps.rel.outputs.digest }}"; want="${want#sha256:}"
+          echo "$want  mos.zip" | sha256sum -c -
+
+      - name: Build raw image
+        if: steps.rel.outputs.skip != 'true'
+        run: ./scripts/build-img.sh mos.zip mos.img 16G
+
+      - name: Smoke test (boot + WebUI)
+        if: steps.rel.outputs.skip != 'true'
+        run: ./scripts/smoke-test.sh mos.img
+
+      - name: Convert + package
+        if: steps.rel.outputs.skip != 'true'
+        run: |
+          NAME="mos-${{ steps.rel.outputs.tag }}-amd64"
+          ./scripts/convert.sh mos.img dist "$NAME"
+          ./scripts/make-ova.sh "dist/$NAME.vmdk" "dist/$NAME.ova" "${{ steps.rel.outputs.tag }}"
+          xz -T0 -k mos.img && mv mos.img.xz "dist/$NAME.img.xz"
+          (cd dist && sha256sum * > SHA256SUMS)
+          ls -lh dist
+
+      - name: Publish release
+        if: steps.rel.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="vm-${{ steps.rel.outputs.tag }}"
+          gh release create "$TAG" dist/* --title "MOS ${{ steps.rel.outputs.tag }} VM images" \
+            --notes "Unofficial VM images built from mos-nas/mos-releases ${{ steps.rel.outputs.tag }}. Formats: OVA/VMDK (ESXi), VHDX (Hyper-V), qcow2 (KVM/Proxmox), raw .img.xz. UEFI required; Secure Boot off." \
+            || gh release upload "$TAG" dist/* --clobber
