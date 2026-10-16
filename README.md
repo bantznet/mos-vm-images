@@ -35,12 +35,15 @@ and extra blank virtual disks if you want to try pools. After boot, find the VM'
 ### VirtualBox (Windows / Linux / Intel Mac)
 [Download VirtualBox](https://www.virtualbox.org/wiki/Downloads) | [Manual](https://www.virtualbox.org/wiki/Documentation)
 
-1. Download `mos-<version>-amd64.vmdk` (or `.vhdx`).
+1. Download `mos-<version>-amd64.vmdk` (or `.vhdx`). **Use the VMDK, not the OVA:** the OVA is built for VMware and VirtualBox ignores its UEFI setting.
 2. **New** VM -> Type *Linux*, Version *Other Linux (64-bit)*, 8 GB RAM, 4 CPUs. Choose *Do not add a virtual hard disk*.
-3. Settings -> **System -> Motherboard -> Enable EFI**.
+3. Settings -> **System -> Motherboard -> tick _Enable EFI_.** Without it the VM will not boot.
 4. Settings -> **Storage -> SATA controller -> Add hard disk -> Choose existing** -> pick the VMDK. Add blank disks the same way.
-5. Settings -> **Network -> Bridged Adapter** (adapter type *Intel PRO/1000*). With NAT, add a port-forward from host port 8080 to guest port 80 and browse `http://localhost:8080/`.
-6. Start the VM and wait ~1-3 minutes. The console may be garbled or blank; that's cosmetic. Find the IP in your router's DHCP leases.
+5. Settings -> **Network -> Adapter 1 -> Bridged Adapter** (Intel PRO/1000). Use wired Ethernet if possible; bridging over Wi-Fi often fails.
+6. Start the VM and **wait 1-3 minutes.** The window is blank or looks frozen while MOS boots. When it finishes, the console shows a login prompt with the VM's address, e.g. `IPv4: 192.168.1.164`.
+7. Open `http://<that address>/` in a browser and set the account passwords.
+
+`smartd failed` in the boot log is expected in a VM.
 
 ### VMware Workstation / Fusion / ESXi
 [Workstation & Fusion product page](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | [How to download (free for personal use)](https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hype.html). Downloads need a free Broadcom account.
@@ -57,7 +60,7 @@ Create a **Generation 2** VM, attach the `.vhdx` as its disk, and **disable Secu
 Import the `.qcow2` (`qm importdisk <vmid> mos.qcow2 <storage>`) into a q35 + OVMF VM with Secure Boot keys not pre-enrolled.
 
 ### Tips
-- First boot can show a garbled console; the system is still booting. Use the WebUI.
+- The console can look blank, frozen or garbled for the first minute or two. Wait; the login banner shows the VM's IPv4 address.
 - The VM's IP can change after "Install to Disk" or a reboot; reserve it in your DHCP server.
 - Use **Install to Disk** in the MOS UI to a blank virtual disk if you'd rather not boot from the image.
 
