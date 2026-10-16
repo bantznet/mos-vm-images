@@ -6,6 +6,13 @@
 ![UEFI only](https://img.shields.io/badge/boot-UEFI%20only-blue)
 ![Formats](https://img.shields.io/badge/formats-OVA%20%7C%20VMDK%20%7C%20VHDX%20%7C%20qcow2-lightgrey)
 
+> [!IMPORTANT]
+> **These images are for trying MOS in a virtual machine only.** They are unofficial, built by a third party, and not
+> supported by the MOS project. To run MOS for real (on bare metal or as a long-term server), follow the official
+> instructions: [Create Bootable Media](https://docs.mos-official.net/docs/Installation/Create-Bootable-Media/) and the
+> [MOS documentation](https://docs.mos-official.net/). Report MOS bugs upstream at
+> [mos-nas/mos-releases](https://github.com/mos-nas/mos-releases), and image-build problems here.
+
 Unofficial pipeline that turns the official [MOS](https://github.com/mos-nas/mos-releases) release ZIP
 into ready-to-import VM disk images.
 
