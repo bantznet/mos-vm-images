@@ -4,7 +4,7 @@
 [![Latest image](https://img.shields.io/github/v/release/bantznet/mos-vm-images?label=latest%20image)](https://github.com/bantznet/mos-vm-images/releases/latest)
 [![MOS upstream](https://img.shields.io/github/v/release/mos-nas/mos-releases?label=upstream%20MOS)](https://github.com/mos-nas/mos-releases/releases)
 ![UEFI only](https://img.shields.io/badge/boot-UEFI%20only-blue)
-![Formats](https://img.shields.io/badge/formats-OVA%20%7C%20VMDK%20%7C%20VHDX%20%7C%20qcow2-lightgrey)
+![Formats](https://img.shields.io/badge/formats-OVA%20%7C%20VMDK%20%7C%20qcow2-lightgrey)
 
 > [!IMPORTANT]
 > **These images are for trying MOS in a virtual machine only.** They are unofficial, built by a third party, and not
@@ -19,7 +19,6 @@ into ready-to-import VM disk images.
 | Format | For |
 |---|---|
 | `.ova` / `.vmdk` | ESXi / VMware |
-| `.vhdx` | Hyper-V |
 | `.qcow2` | Proxmox / KVM |
 | `.img.xz` | raw disk, anything else |
 
@@ -87,7 +86,7 @@ and `scripts/make-ova.sh` convert/package it; `scripts/smoke-test.sh` boots it u
     ./scripts/make-ova.sh dist/mos.vmdk dist/mos.ova x.y.z
 
 ## Status
-Not affiliated with the MOS project. ESXi/Hyper-V boot is **untested** unless noted in a release.
+Not affiliated with the MOS project. ESXi and Fusion are **untested**; Hyper-V is **not supported** (see above).
 MOS components are under their own licenses; see the upstream repo.
 
 ## License

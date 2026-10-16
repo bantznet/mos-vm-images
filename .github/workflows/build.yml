@@ -85,7 +85,9 @@ jobs:
 
           Unofficial VM images built from [mos-nas/mos-releases ${{ steps.rel.outputs.tag }}](https://github.com/mos-nas/mos-releases/releases/tag/${{ steps.rel.outputs.tag }}).
 
-          Formats: OVA/VMDK (ESXi/VMware), VHDX (Hyper-V), qcow2 (KVM/Proxmox), raw .img.xz. UEFI required; Secure Boot off. Verify downloads with SHA256SUMS.
+          Formats: OVA/VMDK (VMware, VirtualBox), qcow2 (KVM/Proxmox), raw .img.xz. UEFI required; Secure Boot off. Verify downloads with SHA256SUMS.
+
+          Hyper-V is **not supported**: the MOS kernel currently has no Hyper-V drivers, so the VM cannot find its boot disk.
           EOF
 
       - name: Publish release
