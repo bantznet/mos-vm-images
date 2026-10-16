@@ -65,8 +65,40 @@ the MOS kernel is built without Hyper-V support
 so it cannot see Hyper-V's VMBus/SCSI disks. Generation 1 VMs are BIOS-only while MOS requires UEFI.
 This needs an upstream change to the MOS kernel. On a Windows PC, use VirtualBox or VMware Workstation instead (both tested above).
 
-### Proxmox / KVM
-Import the `.qcow2` (`qm importdisk <vmid> mos.qcow2 <storage>`) into a q35 + OVMF VM with Secure Boot keys not pre-enrolled.
+### Proxmox VE (tested)
+Run these in the **Proxmox host shell**. They download the latest image, verify it, build a UEFI VM and attach the disk.
+
+```bash
+# 1. Download the latest .qcow2 + checksums, and verify
+cd /var/tmp
+curl -fsSL https://api.github.com/repos/bantznet/mos-vm-images/releases/latest \
+  | grep -oE 'https://[^"]+(\.qcow2|SHA256SUMS)' | xargs -n1 curl -fLO
+sha256sum -c --ignore-missing SHA256SUMS
+
+# 2. Create the VM (UEFI, Secure Boot keys NOT pre-enrolled)
+VMID=$(pvesh get /cluster/nextid)
+STORAGE=local-lvm        # any storage that holds VM disks (e.g. local-lvm, nvme-ceph)
+qm create $VMID --name mos --machine q35 --bios ovmf --cpu host --cores 4 --memory 8192 \
+  --ostype l26 --scsihw virtio-scsi-single --net0 virtio,bridge=vmbr0 \
+  --efidisk0 $STORAGE:1,efitype=4m,pre-enrolled-keys=0
+
+# 3. Import the image and attach it as the boot disk, plus a blank 32 GB disk to play with
+qm importdisk $VMID /var/tmp/mos-*-amd64.qcow2 $STORAGE
+DISK=$(qm config $VMID | awk -F'[ ,]' '/^unused0/{print $2}')
+qm set $VMID --scsi0 "$DISK" --scsi1 $STORAGE:32 --boot order=scsi0
+
+# 4. Start it and note its MAC address
+qm start $VMID
+qm config $VMID | grep -o 'virtio=[^,]*'
+```
+
+Then wait 1-3 minutes. The Proxmox console can look garbled; that is cosmetic and MOS is still booting. Find the VM's address from
+its MAC in your router's DHCP leases (or `ping` sweep your subnet and check `ip neigh`), then open `http://<address>/` and set the passwords.
+Use **Install to Disk** in the MOS UI onto the blank disk if you want it independent of the boot image.
+
+To remove the test VM: `qm stop $VMID && qm destroy $VMID --purge`.
+
+*Other KVM setups:* the same qcow2 works with libvirt/virt-manager (UEFI/OVMF firmware, Secure Boot off, SATA or virtio disk).
 
 ### Tips
 - The console can look blank, frozen or garbled for the first minute or two. Wait; the login banner shows the VM's IPv4 address.
