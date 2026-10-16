@@ -22,14 +22,16 @@ into ready-to-import VM disk images.
 | `.qcow2` | Proxmox / KVM |
 | `.img.xz` | raw disk, anything else |
 
-Requirements for the VM: **UEFI firmware, Secure Boot off**, 4+ GB RAM (8 recommended), SATA or NVMe disk,
-an emulated NIC (e1000e) plus extra disks for pools. Then open `http://<vm-ip>/`.
+## How to test MOS on various virtualization platforms
 
-## Try it on desktop VM software
-
-Grab the files from the [Releases](../../releases) page. **These steps are untested on most platforms; boot reports welcome.**
-All platforms need: **UEFI/EFI on, Secure Boot off**, 4+ GB RAM (8 recommended), 2+ CPUs, a SATA (or NVMe) boot disk,
-and extra blank virtual disks if you want to try pools. After boot, find the VM's IP and open `http://<vm-ip>/` to set passwords.
+Grab the files from the [Releases](../../releases) page. **These steps are untested on some platforms; boot reports welcome.**
+All platforms need: 
+- **UEFI/EFI on, Secure Boot off**
+- 4+ GB RAM (8 recommended)
+- 2+ CPUs
+- a SATA (or NVMe) boot disk,
+- extra blank virtual disks if you want to try pools. 
+After boot, find the VM's IP and open `http://<vm-ip>/` to set passwords.
 
 ### VirtualBox (Windows / Linux / Intel Mac)
 [Download VirtualBox](https://www.virtualbox.org/wiki/Downloads) | [Manual](https://www.virtualbox.org/wiki/Documentation)
@@ -48,7 +50,7 @@ and extra blank virtual disks if you want to try pools. After boot, find the VM'
 (Linux, Other Linux 64-bit, tick *Enable EFI*), and attach the VMDK under **Settings -> Storage -> SATA controller -> Add Hard Disk -> Choose existing**.
 
 ### VMware Workstation (tested) / Fusion / ESXi (untested)
-[Workstation & Fusion product page](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | [How to download (free for personal use)](https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hype.html). Downloads need a free Broadcom account.
+[Workstation & Fusion product page](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | [How to download (free for personal use)](https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hype.html)
 
 **Workstation Pro:** **File -> Open** the `.ova` (or double-click it) and import it. UEFI, the SATA disk and the network adapter are
 already set in the OVA, so no settings need changing. Use a bridged network adapter, power on, and wait 1-3 minutes; the console
@@ -56,14 +58,6 @@ shows the VM's `IPv4:` address. Open `http://<that address>/`.
 
 **Fusion (Mac) and ESXi** should import the same OVA but are untested. On ESXi, if the OVA import complains, upload the `.vmdk`, run
 `vmkfstools -i mos.vmdk -d thin mos-esx.vmdk`, and attach it to a new UEFI VM (SATA controller, `e1000e` NIC).
-
-### Hyper-V (Windows): not currently supported
-A tester running MOS under Hyper-V reported that it starts, then stops in its initramfs with
-`ERROR: MOS boot device with label: MOS not found`. The likely cause (inferred from the kernel config, not yet confirmed upstream):
-the MOS kernel is built without Hyper-V support
-(`# CONFIG_HYPERV is not set` in [mos-kernel](https://github.com/mos-nas/mos-kernel/blob/master/kernel-config/config)),
-so it cannot see Hyper-V's VMBus/SCSI disks. Generation 1 VMs are BIOS-only while MOS requires UEFI.
-This needs an upstream change to the MOS kernel. On a Windows PC, use VirtualBox or VMware Workstation instead (both tested above).
 
 ### Proxmox VE (tested)
 Run these in the **Proxmox host shell**. They download the latest image, verify it, build a UEFI VM and attach the disk.
@@ -99,6 +93,14 @@ Use **Install to Disk** in the MOS UI onto the blank disk if you want it indepen
 To remove the test VM: `qm stop $VMID && qm destroy $VMID --purge`.
 
 *Other KVM setups:* the same qcow2 works with libvirt/virt-manager (UEFI/OVMF firmware, Secure Boot off, SATA or virtio disk).
+
+### Hyper-V (Windows): not currently supported
+A tester running MOS under Hyper-V reported that it starts, then stops in its initramfs with
+`ERROR: MOS boot device with label: MOS not found`. The likely cause (inferred from the kernel config, not yet confirmed upstream):
+the MOS kernel is built without Hyper-V support
+(`# CONFIG_HYPERV is not set` in [mos-kernel](https://github.com/mos-nas/mos-kernel/blob/master/kernel-config/config)),
+so it cannot see Hyper-V's VMBus/SCSI disks. Generation 1 VMs are BIOS-only while MOS requires UEFI.
+This needs an upstream change to the MOS kernel. On a Windows PC, use VirtualBox or VMware Workstation instead (both tested above).
 
 ### Tips
 - The console can look blank, frozen or garbled for the first minute or two. Wait; the login banner shows the VM's IPv4 address.
