@@ -1,6 +1,11 @@
 name: Build MOS VM images
 
 on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "templates/**"
+      - ".github/workflows/**"
   workflow_dispatch:
     inputs:
       tag:
@@ -11,6 +16,10 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -80,7 +89,8 @@ jobs:
           EOF
 
       - name: Publish release
-        if: steps.rel.outputs.skip != 'true'
+        # PRs and non-main manual runs build + test only; they never publish.
+        if: steps.rel.outputs.skip != 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
