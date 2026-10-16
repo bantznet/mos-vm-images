@@ -77,3 +77,7 @@ and `scripts/make-ova.sh` convert/package it; `scripts/smoke-test.sh` boots it u
 ## Status
 Not affiliated with the MOS project. ESXi/Hyper-V boot is **untested** unless noted in a release.
 MOS components are under their own licenses; see the upstream repo.
+
+## License
+The build scripts and workflow in this repo are [MIT licensed](LICENSE). MOS itself and the images it produces
+contain components under their own licenses; see the [upstream repo](https://github.com/mos-nas/mos-releases).
