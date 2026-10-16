@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -100,3 +101,31 @@ jobs:
           gh release create "$TAG" dist/* --title "MOS ${{ steps.rel.outputs.tag }} VM images" \
             --notes-file release-notes.md \
             || gh release upload "$TAG" dist/* --clobber
+
+      - name: Open or update an issue when the build fails
+        if: failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create build-failure --color B60205 --description "Automated build failed" 2>/dev/null || true
+          N=$(gh issue list --label build-failure --state open --json number -q '.[0].number')
+          if [ -n "$N" ]; then
+            gh issue comment "$N" --body "Build failed again: $RUN_URL"
+          else
+            gh issue create --title "Scheduled build failed" --label build-failure \
+              --assignee "${{ github.repository_owner }}" \
+              --body "A build of the MOS VM images failed. Run: $RUN_URL
+
+          This issue closes itself after the next successful publish."
+          fi
+
+      - name: Close failure issues after a successful publish
+        if: success() && steps.rel.outputs.skip != 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          for n in $(gh issue list --label build-failure --state open --json number -q '.[].number'); do
+            gh issue close "$n" --comment "Build succeeded: $RUN_URL"
+          done
