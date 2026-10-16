@@ -67,6 +67,18 @@ jobs:
           (cd dist && sha256sum * > SHA256SUMS)
           ls -lh dist
 
+      - name: Write release notes
+        if: steps.rel.outputs.skip != 'true'
+        run: |
+          cat > release-notes.md <<EOF
+          > [!IMPORTANT]
+          > **These images are for trying MOS in a virtual machine only.** They are unofficial, built by a third party, and not supported by the MOS project. To run MOS long-term, follow the official instructions: [Create Bootable Media](https://docs.mos-official.net/docs/Installation/Create-Bootable-Media/) and the [MOS docs](https://docs.mos-official.net/).
+
+          Unofficial VM images built from [mos-nas/mos-releases ${{ steps.rel.outputs.tag }}](https://github.com/mos-nas/mos-releases/releases/tag/${{ steps.rel.outputs.tag }}).
+
+          Formats: OVA/VMDK (ESXi/VMware), VHDX (Hyper-V), qcow2 (KVM/Proxmox), raw .img.xz. UEFI required; Secure Boot off. Verify downloads with SHA256SUMS.
+          EOF
+
       - name: Publish release
         if: steps.rel.outputs.skip != 'true'
         env:
@@ -74,5 +86,5 @@ jobs:
         run: |
           TAG="vm-${{ steps.rel.outputs.tag }}"
           gh release create "$TAG" dist/* --title "MOS ${{ steps.rel.outputs.tag }} VM images" \
-            --notes "Unofficial VM images built from mos-nas/mos-releases ${{ steps.rel.outputs.tag }}. Formats: OVA/VMDK (ESXi), VHDX (Hyper-V), qcow2 (KVM/Proxmox), raw .img.xz. UEFI required; Secure Boot off." \
+            --notes-file release-notes.md \
             || gh release upload "$TAG" dist/* --clobber
