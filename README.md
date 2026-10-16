@@ -35,15 +35,18 @@ and extra blank virtual disks if you want to try pools. After boot, find the VM'
 ### VirtualBox (Windows / Linux / Intel Mac)
 [Download VirtualBox](https://www.virtualbox.org/wiki/Downloads) | [Manual](https://www.virtualbox.org/wiki/Documentation)
 
-1. Download `mos-<version>-amd64.vmdk` (or `.vhdx`). **Use the VMDK, not the OVA:** the OVA is built for VMware and VirtualBox ignores its UEFI setting.
-2. **New** VM -> Type *Linux*, Version *Other Linux (64-bit)*, 8 GB RAM, 4 CPUs. Choose *Do not add a virtual hard disk*.
-3. Settings -> **System -> Motherboard -> tick _Enable EFI_.** Without it the VM will not boot.
-4. Settings -> **Storage -> SATA controller -> Add hard disk -> Choose existing** -> pick the VMDK. Add blank disks the same way.
-5. Settings -> **Network -> Adapter 1 -> Bridged Adapter** (Intel PRO/1000). Use wired Ethernet if possible; bridging over Wi-Fi often fails.
+1. Download `mos-<version>-amd64.ova`.
+2. **File -> Import Appliance**, pick the OVA, and import it (defaults are fine).
+3. **Before the first boot:** select the VM -> Settings -> **System -> Motherboard -> tick _Enable EFI_.** VirtualBox ignores the OVA's UEFI setting, so without this the VM will not boot.
+4. Settings -> **Network -> Adapter 1 -> Bridged Adapter**. Use wired Ethernet if possible; bridging over Wi-Fi often fails.
+5. Optional: add blank virtual disks (Settings -> Storage) if you want to try storage pools.
 6. Start the VM and **wait 1-3 minutes.** The window is blank or looks frozen while MOS boots. When it finishes, the console shows a login prompt with the VM's address, e.g. `IPv4: 192.168.1.164`.
 7. Open `http://<that address>/` in a browser and set the account passwords.
 
 `smartd failed` in the boot log is expected in a VM.
+
+*Using the `.vmdk` instead (untested):* VirtualBox's Import Appliance only takes OVA/OVF, so create the VM with **Machine -> New**
+(Linux, Other Linux 64-bit, tick *Enable EFI*), and attach the VMDK under **Settings -> Storage -> SATA controller -> Add Hard Disk -> Choose existing**.
 
 ### VMware Workstation / Fusion / ESXi
 [Workstation & Fusion product page](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | [How to download (free for personal use)](https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hype.html). Downloads need a free Broadcom account.
