@@ -58,10 +58,11 @@ shows the VM's `IPv4:` address. Open `http://<that address>/`.
 `vmkfstools -i mos.vmdk -d thin mos-esx.vmdk`, and attach it to a new UEFI VM (SATA controller, `e1000e` NIC).
 
 ### Hyper-V (Windows): not currently supported
-Tested on Windows 11 with a Generation 2 VM and Secure Boot off: MOS starts, then stops in its initramfs with
-`ERROR: MOS boot device with label: MOS not found`. The MOS kernel is built without Hyper-V support
+A tester running MOS under Hyper-V reported that it starts, then stops in its initramfs with
+`ERROR: MOS boot device with label: MOS not found`. The likely cause (inferred from the kernel config, not yet confirmed upstream):
+the MOS kernel is built without Hyper-V support
 (`# CONFIG_HYPERV is not set` in [mos-kernel](https://github.com/mos-nas/mos-kernel/blob/master/kernel-config/config)),
-so it cannot see Hyper-V's VMBus/SCSI disks, and Generation 1 VMs are BIOS-only while MOS requires UEFI.
+so it cannot see Hyper-V's VMBus/SCSI disks. Generation 1 VMs are BIOS-only while MOS requires UEFI.
 This needs an upstream change to the MOS kernel. On a Windows PC, use VirtualBox or VMware Workstation instead (both tested above).
 
 ### Proxmox / KVM
