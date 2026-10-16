@@ -26,6 +26,8 @@ All platforms need: **UEFI/EFI on, Secure Boot off**, 4+ GB RAM (8 recommended),
 and extra blank virtual disks if you want to try pools. After boot, find the VM's IP and open `http://<vm-ip>/` to set passwords.
 
 ### VirtualBox (Windows / Linux / Intel Mac)
+[Download VirtualBox](https://www.virtualbox.org/wiki/Downloads) | [Manual](https://www.virtualbox.org/wiki/Documentation)
+
 1. Download `mos-<version>-amd64.vmdk` (or `.vhdx`).
 2. **New** VM -> Type *Linux*, Version *Other Linux (64-bit)*, 8 GB RAM, 4 CPUs. Choose *Do not add a virtual hard disk*.
 3. Settings -> **System -> Motherboard -> Enable EFI**.
@@ -34,10 +36,14 @@ and extra blank virtual disks if you want to try pools. After boot, find the VM'
 6. Start the VM and wait ~1-3 minutes. The console may be garbled or blank; that's cosmetic. Find the IP in your router's DHCP leases.
 
 ### VMware Workstation / Fusion / ESXi
+[Workstation & Fusion product page](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion) | [How to download (free for personal use)](https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hype.html). Downloads need a free Broadcom account.
+
 Import the `.ova` (File -> Open, or *Deploy OVF* on ESXi). On ESXi, if the OVA import complains, upload the `.vmdk`, run
 `vmkfstools -i mos.vmdk -d thin mos-esx.vmdk`, and attach it to a new UEFI VM (SATA controller, `e1000e` NIC).
 
 ### Hyper-V (Windows)
+[Enable Hyper-V on Windows](https://learn.microsoft.com/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v)
+
 Create a **Generation 2** VM, attach the `.vhdx` as its disk, and **disable Secure Boot** (Security -> uncheck *Enable Secure Boot*).
 
 ### Proxmox / KVM
