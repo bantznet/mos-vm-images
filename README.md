@@ -58,10 +58,12 @@ shows the VM's `IPv4:` address. Open `http://<that address>/`.
 **Fusion (Mac) and ESXi** should import the same OVA but are untested. On ESXi, if the OVA import complains, upload the `.vmdk`, run
 `vmkfstools -i mos.vmdk -d thin mos-esx.vmdk`, and attach it to a new UEFI VM (SATA controller, `e1000e` NIC).
 
-### Hyper-V (Windows)
-[Enable Hyper-V on Windows](https://learn.microsoft.com/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v)
-
-Create a **Generation 2** VM, attach the `.vhdx` as its disk, and **disable Secure Boot** (Security -> uncheck *Enable Secure Boot*).
+### Hyper-V (Windows): not currently supported
+Tested on Windows 11 with a Generation 2 VM and Secure Boot off: MOS starts, then stops in its initramfs with
+`ERROR: MOS boot device with label: MOS not found`. The MOS kernel is built without Hyper-V support
+(`# CONFIG_HYPERV is not set` in [mos-kernel](https://github.com/mos-nas/mos-kernel/blob/master/kernel-config/config)),
+so it cannot see Hyper-V's VMBus/SCSI disks, and Generation 1 VMs are BIOS-only while MOS requires UEFI.
+This needs an upstream change to the MOS kernel. On a Windows PC, use VirtualBox or VMware Workstation instead (both tested above).
 
 ### Proxmox / KVM
 Import the `.qcow2` (`qm importdisk <vmid> mos.qcow2 <storage>`) into a q35 + OVMF VM with Secure Boot keys not pre-enrolled.
