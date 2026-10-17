@@ -66,6 +66,8 @@ jobs:
 
       - name: Smoke test (boot + WebUI)
         if: steps.rel.outputs.skip != 'true'
+        env:
+          SPEC_OUT: ${{ github.workspace }}/mos-openapi.json
         run: ./scripts/smoke-test.sh mos.img
 
       - name: Convert + package
@@ -75,6 +77,7 @@ jobs:
           ./scripts/convert.sh mos.img dist "$NAME"
           ./scripts/make-ova.sh "dist/$NAME.vmdk" "dist/$NAME.ova" "${{ steps.rel.outputs.tag }}"
           xz -T0 -k mos.img && mv mos.img.xz "dist/$NAME.img.xz"
+          cp mos-openapi.json "dist/mos-openapi-${{ steps.rel.outputs.tag }}.json"
           (cd dist && sha256sum -- * > SHA256SUMS)
           ls -lh dist
 

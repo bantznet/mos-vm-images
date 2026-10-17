@@ -15,7 +15,20 @@ QPID=$!; trap 'kill $QPID 2>/dev/null || true' EXIT
 
 for ((t=0; t<TIMEOUT; t+=5)); do
   code=$(curl -s -m 3 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/" || true)
-  if [ "$code" = "200" ]; then echo "WebUI up after ~${t}s (accel=$ACCEL)"; exit 0; fi
+  if [ "$code" = "200" ]; then
+    echo "WebUI up after ~${t}s (accel=$ACCEL)"
+    if [ -n "${SPEC_OUT:-}" ]; then
+      # The API can come up a little after the WebUI: retry for up to 60s.
+      for ((s=0; s<60; s+=5)); do
+        if curl -fsS -m 10 "http://127.0.0.1:$PORT/api-docs/swagger-ui-init.js" | "$(dirname "$0")/extract-spec.py" > "$SPEC_OUT" 2>/dev/null; then
+          echo "OpenAPI spec saved to $SPEC_OUT"; exit 0
+        fi
+        sleep 5
+      done
+      echo "Could not extract OpenAPI spec from /api-docs"; exit 1
+    fi
+    exit 0
+  fi
   sleep 5
 done
 echo "WebUI did not come up within ${TIMEOUT}s (accel=$ACCEL)"; exit 1
