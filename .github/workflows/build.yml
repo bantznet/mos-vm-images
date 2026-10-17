@@ -5,7 +5,6 @@ on:
     paths:
       - "scripts/**"
       - "templates/**"
-      - ".github/workflows/**"
   workflow_dispatch:
     inputs:
       tag:
@@ -45,9 +44,11 @@ jobs:
           TAG=$(jq -r .tag_name rel.json)
           ZIP_URL=$(jq -r '.assets[] | select(.name|test("_amd64\\.zip$")) | .browser_download_url' rel.json)
           DIGEST=$(jq -r '.assets[] | select(.name|test("_amd64\\.zip$")) | .digest' rel.json)
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "zip_url=$ZIP_URL" >> "$GITHUB_OUTPUT"
-          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          {
+            echo "tag=$TAG"
+            echo "zip_url=$ZIP_URL"
+            echo "digest=$DIGEST"
+          } >> "$GITHUB_OUTPUT"
           if gh release view "vm-$TAG" >/dev/null 2>&1 && [ "${{ github.event_name }}" = "schedule" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
@@ -74,7 +75,7 @@ jobs:
           ./scripts/convert.sh mos.img dist "$NAME"
           ./scripts/make-ova.sh "dist/$NAME.vmdk" "dist/$NAME.ova" "${{ steps.rel.outputs.tag }}"
           xz -T0 -k mos.img && mv mos.img.xz "dist/$NAME.img.xz"
-          (cd dist && sha256sum * > SHA256SUMS)
+          (cd dist && sha256sum -- * > SHA256SUMS)
           ls -lh dist
 
       - name: Write release notes
