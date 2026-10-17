@@ -3,7 +3,6 @@
 [![Build](https://github.com/bantznet/mos-vm-images/actions/workflows/build.yml/badge.svg)](https://github.com/bantznet/mos-vm-images/actions/workflows/build.yml)
 [![Latest image](https://img.shields.io/github/v/release/bantznet/mos-vm-images?label=latest%20image)](https://github.com/bantznet/mos-vm-images/releases/latest)
 [![MOS upstream](https://img.shields.io/github/v/release/mos-nas/mos-releases?label=upstream%20MOS)](https://github.com/mos-nas/mos-releases/releases)
-![UEFI only](https://img.shields.io/badge/boot-UEFI%20only-blue)
 ![Formats](https://img.shields.io/badge/formats-OVA%20%7C%20VMDK%20%7C%20qcow2-lightgrey)
 
 > [!IMPORTANT]
