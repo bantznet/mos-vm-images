@@ -3,6 +3,7 @@
 [![Build](https://github.com/bantznet/mos-vm-images/actions/workflows/build.yml/badge.svg)](https://github.com/bantznet/mos-vm-images/actions/workflows/build.yml)
 [![Latest image](https://img.shields.io/github/v/release/bantznet/mos-vm-images?label=latest%20image)](https://github.com/bantznet/mos-vm-images/releases/latest)
 [![MOS upstream](https://img.shields.io/github/v/release/mos-nas/mos-releases?label=upstream%20MOS)](https://github.com/mos-nas/mos-releases/releases)
+![Formats](https://img.shields.io/badge/formats-OVA%20%7C%20VMDK%20%7C%20VHDX%20%7C%20qcow2-lightgrey)
 
 > [!IMPORTANT]
 > **These images are for trying MOS in a virtual machine only.** They are unofficial, built by a third party, and not
@@ -17,6 +18,7 @@ into ready-to-import VM disk images.
 | Format | For |
 |---|---|
 | `.ova` / `.vmdk` | ESXi / VMware |
+| `.vhdx` | Hyper-V |
 | `.qcow2` | Proxmox / KVM |
 | `.img.xz` | raw disk, anything else |
 
@@ -101,11 +103,21 @@ To remove the test VM: `qm stop $VMID && qm destroy $VMID --purge`.
 
 *Other KVM setups:* the same qcow2 works with libvirt/virt-manager (UEFI/OVMF firmware, Secure Boot off, SATA or virtio disk).
 
-### Hyper-V (Windows): not currently supported
-MOS starts under Hyper-V, then stops in its initramfs with `ERROR: MOS boot device with label: MOS not found`.
-The likely cause (inferred, not confirmed upstream) is that the MOS kernel is built without Hyper-V support
-([`# CONFIG_HYPERV is not set`](https://github.com/mos-nas/mos-kernel/blob/master/kernel-config/config)),
-so it cannot see Hyper-V's disks. This needs an upstream change. On a Windows PC, use VirtualBox or VMware Workstation instead.
+### Hyper-V (Windows): untested
+[Enable Hyper-V on Windows](https://learn.microsoft.com/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v)
+
+This needs a MOS release whose kernel includes Hyper-V support: **0.6.1-stable or newer** (upstream turned on
+`CONFIG_HYPERV=y` / `CONFIG_HYPERV_STORAGE=m` in mos-kernel 6.18.57). Earlier releases cannot see Hyper-V's disks and
+stop in the initramfs with `ERROR: MOS boot device with label: MOS not found`. Boot reports welcome.
+
+1. Download `mos-<version>-amd64.vhdx`.
+2. **New -> Virtual Machine** and choose a **Generation 2** VM (Generation 1 is BIOS-only and MOS needs UEFI); 4 CPUs, 8 GB RAM.
+3. At *Connect Virtual Hard Disk*, pick **Use an existing virtual hard disk** and select the downloaded `.vhdx`.
+4. Settings -> **Security -> untick _Enable Secure Boot_**.
+5. Settings -> **Network Adapter -> Virtual switch**: an External (bridged) switch, or the Default Switch.
+6. Optional: add blank virtual disks (Settings -> SCSI Controller -> Add) if you want to try storage pools. A disk added
+   while the VM is running only appears in MOS after a guest reboot.
+7. Start the VM, then follow the steps above to find its address and open the WebUI.
 
 ## Development
 
