@@ -49,7 +49,8 @@ jobs:
             echo "zip_url=$ZIP_URL"
             echo "digest=$DIGEST"
           } >> "$GITHUB_OUTPUT"
-          if gh release view "vm-$TAG" >/dev/null 2>&1 && [ "${{ github.event_name }}" = "schedule" ]; then
+          if [ "${{ github.event_name }}" = "schedule" ] \
+            && gh release view "vm-$TAG" --json body -q .body 2>/dev/null | grep -Fq "$DIGEST"; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -88,7 +89,7 @@ jobs:
           > [!IMPORTANT]
           > **These images are for trying MOS in a virtual machine only.** They are unofficial, built by a third party, and not supported by the MOS project. To run MOS long-term, follow the official instructions: [Create Bootable Media](https://docs.mos-official.net/docs/Installation/Create-Bootable-Media/) and the [MOS docs](https://docs.mos-official.net/).
 
-          Unofficial VM images built from [mos-nas/mos-releases ${{ steps.rel.outputs.tag }}](https://github.com/mos-nas/mos-releases/releases/tag/${{ steps.rel.outputs.tag }}).
+          Unofficial VM images built from [mos-nas/mos-releases ${{ steps.rel.outputs.tag }}](https://github.com/mos-nas/mos-releases/releases/tag/${{ steps.rel.outputs.tag }}) (\`${{ steps.rel.outputs.digest }}\`).
 
           Formats: OVA/VMDK (VMware, VirtualBox), VHDX (Hyper-V), qcow2 (KVM/Proxmox), raw .img.xz. UEFI required; Secure Boot off. Verify downloads with SHA256SUMS.
 
@@ -102,9 +103,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="vm-${{ steps.rel.outputs.tag }}"
-          gh release create "$TAG" dist/* --title "MOS ${{ steps.rel.outputs.tag }} VM images" \
-            --notes-file release-notes.md \
-            || gh release upload "$TAG" dist/* --clobber
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --notes-file release-notes.md
+          else
+            gh release create "$TAG" dist/* --title "MOS ${{ steps.rel.outputs.tag }} VM images" \
+              --notes-file release-notes.md
+          fi
 
       - name: Open or update an issue when the build fails
         if: failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
