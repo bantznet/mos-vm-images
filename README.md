@@ -103,7 +103,7 @@ To remove the test VM: `qm stop $VMID && qm destroy $VMID --purge`.
 
 *Other KVM setups:* the same qcow2 works with libvirt/virt-manager (UEFI/OVMF firmware, Secure Boot off, SATA or virtio disk).
 
-### Hyper-V (Windows): untested
+### Hyper-V (Windows): tested!
 [Enable Hyper-V on Windows](https://learn.microsoft.com/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v)
 
 This needs a MOS release whose kernel includes Hyper-V support: **0.6.1-stable or newer** (upstream turned on
