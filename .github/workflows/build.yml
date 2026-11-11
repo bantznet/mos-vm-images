@@ -28,9 +28,15 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install tools
+        timeout-minutes: 15
         run: |
-          sudo apt-get update
-          sudo apt-get install -y qemu-utils qemu-system-x86 ovmf parted dosfstools unzip jq
+          # Azure apt mirror (azure.archive.ubuntu.com) can fail DNS on runners; use canonical archives
+          for f in /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do
+            [ -f "$f" ] && sudo sed -i -E 's#(mirror\+file:/etc/apt/apt-mirrors\.txt|https?://azure\.archive\.ubuntu\.com/ubuntu/?)#http://archive.ubuntu.com/ubuntu/#g' "$f"
+          done
+          APT="-o Acquire::Retries=5 -o Acquire::http::Timeout=30"
+          sudo apt-get $APT update
+          sudo apt-get $APT install -y qemu-utils qemu-system-x86 ovmf parted dosfstools unzip jq
 
       - name: Resolve upstream release
         id: rel
